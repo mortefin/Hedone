@@ -1,0 +1,105 @@
+﻿Subroutines:
+
+- - - - - For finding connections:
+
+FindConnectionsOfConcept gets the connections of a single concept, using FindConnections and TurnCOWintowords. Requires %ConceptForFCC%, returns %ConsOfWordFCC% and %WordsOfWordFCC%.
+
+AltFindConnectionsOfConcept uses FindConnectionsInner but is otherwise the same as FindConnectionsOfConcept.
+
+DirectwordsOfConcept requires %ConceptForDwOC%. Gives you the immediate connections of the concept, as words, outputting: %Directword1%, %directwordcount%
+
+GetImmediateReferences (incomplete) gets the immediate references of the concept %ConceptForGIR%, returned as %GIRReference[num]% and %[Num or Word]ForGIRReference[num]" (the number of the concept that has the reference)
+
+FindConnections gets the cons of the words the player sent Hedone and all the cons of the cons it has, plus the cons of those cons, etc stored as %ConsOfWord1%, %ConsOfWord2%, etc (does not start with a star, but ends with a star). When it finds a new clause, it changes WordCount so that it ends before the first word of the found clause annd sets ClauseFound to 1.
+
+GetReverseConstring gets the references to a concept (save it as WordConNumForGRR), and the references of those references, etc, taking into account numbers in the references.
+
+GetFullConnection returns %FullCon%, with the full connection. %TheCons% must contain the constring the desired connection is in. %ConStart% must contain the beginning of the con (ex: .23'). Constring must begin with a period.
+
+ConsOfWordInFileForSemParse See: ConsOfword, but this one uses FileForSemParse
+
+ConsOfWord gets the direct connections (as numbers) for the word %WordNeedingCons%, stored as %ConString%. No period, at the start.
+
+GetConnections retrieves the direct connections of word-number %WordNum%, storing them as variable %WordCons%, starting with no period.
+
+- - - - - For connections and concepts:
+
+FindWordNumber finds the number (Example: "i love pie" has "pie" as the third word) of word %WordForFWN%, saved as %FoundWordNumber%. If the word is not found (because it is not in the current clause), the number is set to 0.
+
+GetNumOfWord gets the number of commas for the word %WordToFind%, saved as %WordNum%, creating it if needed. If it's a number, %wordnum% is saved as %N"number"% and sets %IsANumber% to 1.
+
+GetWordOfNum gets the word of word-number %NumToFind%, saved as %WordOfNum%
+
+GetNumsFromComplexConstring gets %cConCount%, cConNum%1%, cConNum%2% etc from the complex connection's %ConString% (be sure the constring starts with a skull)
+
+CheckRelationship needs %WordForCR% and %CRword[number]% (as many words as wanted, ONLY the literal concepts, no skulls or anything). If they're in the same complex connection, CRvalue is 1, otherwise it's 0.
+
+- - - - - For constrings (connection strings):
+
+GetNumsFromConString gets %ConCount%, ConNum%1%, ConNum%2% etc from %ConString% (be sure the constring does not start with a star)
+
+GetWordsFromConString gets %WordNum1%, %WordNum2%, etc (the words in the connection-string) and %AllWords% from %ConString%.
+
+TurnCOWintoWords gets the connected words of each word, saving them as %WordsOfWord1%, %WordsOfWord2%, etc
+
+TurnConstringIntoWords requires %ConstringForCIW%, returns %Wordstring%
+
+Getwordstring2 turns a constring made of numbers into a constring made of the words the numbers represent. Requires %ConstringForwordstring2%, returns %wordstring2% using GetwordsFromConstring
+
+- - - - - For strings:
+
+SimplifyCharacters replaces weird characters (example, ”) with normal ones the code can recognize (example, "). Requires SCtext, outputs the same variable, but with simplified characters.
+
+FindBetweenFirstLast gets the string between %First% and %Last%, with %StringFragment% between them, in %FullString%. Returns %BetweenFirstLast%. If UseStringFragment = 0 (as it usually is), it does not look for the fragment.
+
+FindFirstToLast returns a string inside %FullString%, from %First% to %Last%, saved as %FirstToLast%
+
+- - - - - For file usage:
+
+UseConceptsFile makes it so things are saved to the concepts file.
+
+RevertUseConceptsFile undoes UseConceptsFile, making it so things are saved to whatever file they were being saved to when UseConceptsFile was ran.
+
+ReadClauseExaminer requires %BookFileName%, it saves quotes to %BookFileName%☥Quotes.txt and other stuff to %Bookfilename%☥concepts.txt files.
+
+CreateFileVarFiles creates fileVarName, %FileVarName%2, etc. Requires FileNameForSemParse
+
+CreateAllFilesVar creates AllFilesVar variables.
+
+- - - - - For parsing and saving:
+
+IdentifyWordClass uses the word class (noun, verb, etc) found in WordsOfWord%num% to find the subjects, actions and objects
+
+AddConToConcept requires %ConceptForACTC% and %ConnectionForACTC%. Connection should be numbers, like they are in the file. Connection should start with no star but end with a star. Adds the connection to the concept, in the %FileNameForSemParse% file. 
+
+SolveWordProblem uses SemanticParsing to find the subjects, etc and uses them to update a temp file or answer a question.
+
+SemanticParsing takes a sentence and finds the subject(s), verb(s) and object(s), saving them to the %FileNameForSemParse".txt file, creating it if needed.
+
+SentenceParse takes a bunch of sentences and splits them up into different Sentences to be parsed by SemanticParsing. Sentences are determined by periods. It runs semanticparsing multiple times, for each clause, when semanticparsing finds clause(s) in the sentence.
+
+AddQuoteToFile stores a connection from %Subject1% to %QuoteForAQTF% via %Action1% in %FileNameForSemParse%.txt
+
+AddConnectionToFile attaches the subject(s) to the object(s), via the verb(s), saved to the %FileNameForSemParse% file.
+
+AddToFile adds %StringToAdd% to the %FileNameForSemParse% file. If %UseConceptsFile% is 1, it saves it to the concepts file, and then sets %UseConceptsFile% to 0.
+
+AddCons takes %Subject1%, %Subject2%, etc, %Action1%, 2, etc, %AdjOfObject1%, 2, etc,  %Object1%, 2, etc and adds a connection from the subject to the object (via the actions, if applicable).
+
+- - - - - For turning unknown words into concepts:
+
+FindWords turns the words the user send Hedone into the variables Word1, Word2, etc
+
+FindAltWords finds the multi-word concepts, plural multi-words and plural words of all the words and adjusts the variables accordingly.
+
+FindMultiWordConcepts checks to see if any words (the ones found by FindWords), when put together, form a concept found in the brain. If they do, Hedone turns those words into the same word. Ex: "I eat wonder bread everyday" would go from a wordcount of 4 to 3, with "wonder bread" becoming the third word and "everyday" turning from word5 to word4. Also, if FindPlurals is set to 1 before running it, it will use CheckEndLetters to check to see if any of the multiwordconcepts are found in the brain when "s" and "es" are removed from the final word. After running, FindPlurals is set to 0. If it finds a multi-word, it sets FMWFoundMultiWord to 1 (whenever it runs, at the start, it sets it to 0).
+
+CheckEndLetters checks to see if %CurrentWord% ends in %EndLetters%. If it does, CurrentWord has those EndLetters taken off, and then checks to see if that new word is in the brainfile. If it is, CurrentWord has those letters removed, and the variable is change.
+
+- - - - - Other:
+
+ThinkSubjectsEtc tells the user what the subjects, actions, adjectives and objects are.
+
+HedoneSend sends %Answer%
+
+HedoneThink sends %Thoughts%
