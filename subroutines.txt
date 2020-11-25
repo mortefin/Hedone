@@ -18,9 +18,9 @@ GetFullConnection returns %FullCon%, with the full connection. %TheCons% must co
 
 ConsOfWordInFileForSemParse See: ConsOfword, but this one uses FileForSemParse
 
-ConsOfWord gets the direct connections (as numbers) for the word %WordNeedingCons%, stored as %ConString%. No period, at the start.
+ConsOfWord gets the direct connections (as numbers) for the word %WordNeedingCons%, stored as %ConString%. No star, at the start.
 
-GetConnections retrieves the direct connections of word-number %WordNum%, storing them as variable %WordCons%, starting with no period.
+GetConnections retrieves the direct connections of word-number %WordNum%, storing them as variable %WordCons%, starting with no star.
 
 - - - - - For connections and concepts:
 

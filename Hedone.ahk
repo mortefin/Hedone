@@ -179,32 +179,7 @@ Return
   ;END of PickTask
 If Context = CustomTask
 {
-FileNameForSemParse = %ChosenTask%☥Task
-Gosub, CreateAllFilesVar
-ConceptForFCC = message
-Gosub, FindConnectionsOfConcept
-ConString = %wordsOfwordFCC%
-Gosub, GetNumsFromConString
-LoopPT := 0
-Loop, %ConCount%
-{
-LoopPT++
-CurrentConPT = % ConNum%LoopPT%
-if CurrentConPT contains ☠⚙First☠
-{
-Thoughts = (CustomTask) The connection "%CurrentConPT%" is true of this message, because this message is first.
-Gosub, HedoneThink
-if CurrentConPT contains ☠be☠
-{
-if CurrentConPT contains ☠question☠
-{
-Answer = This is the first message you sent, so it is a question. Noted.
-Gosub, HedoneSend
-}
-}
-}
-}
-  ;checks to see if AllCons says anything about the first message
+Gosub, CustomTask
 }
 If Context = General
 {
@@ -252,6 +227,75 @@ BookFileName := StrReplace(Object1, " ")
 Gosub, SentenceParse
 Return
 }
+}
+Return
+
+CustomTask:
+SendCount++
+FileNameForSemParse = %ChosenTask%☥Task
+Gosub, CreateAllFilesVar
+ConceptForFCC = message
+Gosub, FindConnectionsOfConcept
+ConString = %wordsOfwordFCC%
+Gosub, GetNumsFromConString
+LoopPT := 0
+Loop, %ConCount%
+{
+LoopPT++
+CurrentConPT = % ConNum%LoopPT%
+if CurrentConPT contains ☠⚙First☠
+{
+if CurrentConPT contains ☠⚙After☠
+{
+If SendCount > 1
+{
+Thoughts = (CustomTask) The connection "%CurrentConPT%" is true of this message, because this message is not the first.
+Gosub, HedoneThink
+TheFirst = not the first
+Gosub, AdjectiveIsTrue
+}
+}
+Else
+{
+If SendCount = 1
+{
+Thoughts = (CustomTask) The connection "%CurrentConPT%" is true of this message, because this message is first.
+Gosub, HedoneThink
+TheFirst = the first
+Gosub, AdjectiveIsTrue
+}
+}
+}
+}
+  ;checks to see if AllCons says anything about the first message
+Return
+
+AdjectiveIsTrue:
+Constring = %CurrentConPT%
+Gosub, GetNumsFromComplexConstring
+LoopPTC := 0
+Loop, %CConcount%
+{
+LoopPTC++
+CurrentCConPT = % CConNum%LoopPTC%
+ConceptForFCC = %CurrentCConPT%
+Gosub, FindConnectionsOFConcept
+Thoughts = (CustomTask) Connections of %CurrentCCONPT% are %WordsOFWordFCC%, aka %ConsOfWordFCC%
+Gosub, HedoneThink
+If CurrentCCONpt contains ⚙
+{
+Continue
+}
+If WordsOfWordFCC contains verb
+{
+Continue
+}
+If WordsOfWordFCC contains tense
+{
+Continue
+}
+Answer = This is %thefirst% message you sent, so it is a %CurrentcConPT%. Noted.
+Gosub, HedoneSend
 }
 Return
 
@@ -578,7 +622,7 @@ Realword1 = %Word1%
 Wordcount = 1
 Word1 = %ConceptForFCC%
 RealMainThoughts = %MainThoughts%
-Gosub, FindConnectionsInner
+Gosub, FindConnections
 Tellcons = 0
 Gosub, TurnCOWintowords
 Wordcount = %RealWordCount%
@@ -1981,21 +2025,21 @@ If CanBeAdj = 1
 {
  If FoundVerb = 1
  {
- Thoughts = (IdentifyWordClass) Current word is an object's adjective.
- Gosub, HedoneThink
  AdjCountForObj%ObjectCount%++
  CurrentAdjCount = % AdjCountForObj%ObjectCount%
  Adj%CurrentAdjCount%OfObject%ObjectCount% = %CurrentWord%
  CurrentAdj = % Adj%CurrentAdjCount%OfObject%ObjectCount%
+ Thoughts = (IdentifyWordClass) Current word is object "%objectCount%"'s "%CurrentAdjCount%"th adjective.
+ Gosub, HedoneThink
  }
  Else
  {
- Thoughts = (IdentifyWordClass) Current word is a subject's adjective.
- Gosub, HedoneThink
  AdjCountForSub%SubjectCount%++
  CurrentAdjCount = % AdjCountForSub%SubjectCount%
  Adj%CurrentAdjCount%OfSubject%SubjectCount% = %CurrentWord%
  CurrentAdj = % Adj%CurrentAdjCount%OfSubject%SubjectCount%
+ Thoughts = (IdentifyWordClass) Current word is subject "%SubjectCount%"'s "%CurrentAdjCount%" adjective.
+ Gosub, HedoneThink
  }
 }
 If CanBeObjSubj = 1
@@ -2047,6 +2091,8 @@ Return
   ;TurnCOWintoWords gets the connected words of each word, saving them as WordsOfWord1, 2, 3, etc
 
 GetWordsFromConString:
+Constring := StrReplace(Constring, "☠☠", "☠")
+  ;gets rid of double-skulls
 Numgwc := 0
 AllWords =
 Gosub, GetNumsFromConString
@@ -2278,15 +2324,19 @@ AdjNum =
 Else
 {
 CurrentAdjCount = %AdjCountForSub1%
+ Thoughts = %MainThoughts%(AddCons) Subject1 has %CurrentAdjCount% adjectives.
+ Gosub, HedoneThink ;AddCons
 AdjNum = ☠
 LoopnumAdj := 0
 Loop, %CurrentAdjCount%
 {
 LoopnumAdj++
 CurrentAdj = % Adj%LoopnumAdj%OfSubject1
+ Thoughts = %MainThoughts%(AddCons) Adjective "%LoopNumAdj%" of Subject1 is "%CurrentAdj%".
+ Gosub, HedoneThink ;AddCons
 WordToFind = %CurrentAdj%
 GoSub, GetNumOfWord
-SubjAdjNum = %AdjNum%⚙%WordNum%☠
+SubjAdjNum = %SubjAdjNum%%AdjNum%⚙%WordNum%☠
 }
 ObjectIsComplex = 1
 }
@@ -2357,7 +2407,11 @@ GoSub, GetNumOfWord
 If ObjectIsComplex = 1
 {
 Con = %SubjAdjNum%%ActNum%%AdjNum%☠%WordNum%☠☆
-Thoughts = (AddCons) Con being added is "%Con%"
+RealConstring = %ConString%
+Constring = %Con%
+Gosub, GetWordsFromConstring
+Constring = %RealConstring%
+Thoughts = (AddCons) Con being added is "%Con%", aka "%AllWords%"
 Gosub, HedoneThink
 Con := StrReplace(Con, "☠☠", "☠")
 Con := StrReplace(Con, "☠☠", "☠")
@@ -2529,350 +2583,101 @@ ThisCCon = % cConNum%LoopNumGNFCC%
 Return
   ;gets %cConCount%, cConNum%1%, cConNum%2% etc from %ConString%
 
-FindConnectionsInner:
-MainThoughts = (FindConnections)
-Num6 := 0
-Loop, %PrevWordCount%
-{
-Num6++
-ConsOfWord%Num6% =
-}
-Num := 0
-ComplexConsCount := 0
-  ;clears variables
-Loop, %WordCount%
-{
-AllCons =
-ConString =
-WordClassFound = 0
-Num++
-  ;gets the next word
-ConsToAdd = % ConsForWord%Num%
-WordNeedingCons = % Word%Num%
-If WordNeedingCons contains ☻
-{
-Thoughts = (FindConnections) "%CurrentWordFC%" is not a word. Skipping this word.
-Gosub, HedoneThink
-Continue
-}
-GoSub, ConsOfWord
-  ;gets the constring of the word
-WordToFind = % Word%Num%
-Gosub, GetNumOfWord
-TheWordNum = %WordNum%
-  ;gets the number of the word
-ConString = %ConString%%ConsToAdd%15☆
-AllCons = %AllCons%%ConString%
-RealConstring = %Constring%
-Constring = %AllCons%
-Gosub, GetwordsFromConstring
-Constring = %RealConstring%
-Thoughts = NEXTWORD (FindConnections) the constring of "%WordNeedingCons%" is currently "%allwords%"
-Gosub, HedoneThink ;FindCon
-ConsToFind = %ConString%
-GoSub, GetNumsFromConString
-  ;gets the word-numbers of the word's constring
-AllConsWEW = ☆%AllCons%
-If AllConsWEW contains ☆1☆,☆2☆,☆4☆,☆6☆,☆16☆,☆22☆,☆48☆,☆64☆,☆67☆,☆68☆
-{
-WordClassFound = 1
-}
-WordConNumForGRC = %TheWordNum%
-If AllConsWEW not contains ☆2☆,☆4☆,☆6☆,☆16☆,☆22☆,☆48☆,☆64☆,☆67☆
-{
-Gosub, GetReverseConstring
-  ;finds the concepts that reference this concept, and the concepts that reference those concepts, etc
-}
-If ConCount := 0
-  ;if there are no connections
-{
-}
-Else
-{
-NumCTF := 0
-ComplexConsCount = 0
-IsComplex = 0
-Loop,
-{
-  ;each connection in constofind has its own loop
-If ConsToFind =
-  ;if there are no more connections to find
-{
-NumCTF++
-If NumCTF > %ComplexConsCount%
-{
-Break
-}
-Thoughts = (FindConnections) Now looking for the connections of complex connection "%NumCTF%"
-Gosub, HedoneThink
-ConsToFind = % ComplexConnection%NumCTF%
-IsComplex = 1
-WordClassFound = 1
-}
-ConString = %ConsToFind%
-GoSub, GetNumsFromConString
-ConsToFind =
-Num2 := 0
-Loop, %ConCount%
-{
-Num2++
-WordNum = % ConNum%Num2%
-If WordNum contains ☠
-{
-If IsComplex = 1
-{
-Continue
-  ;skips the connection if it is complex and is for a complex connection
-}
-Else
-{
-ComplexConsCount++
-RealComplexConnection%ComplexConsCount% = %WordNum%
-ComplexConnectionPrior%ComplexConsCount% = %WordNum%
-Thoughts = (FindConnections) WordNum "%Wordnum%" is complex connection "%ComplexConsCount%", I will deal with it after I deal with the simple connections.
-Gosub, HedoneThink ;FindCon
-Constring = %Wordnum%
-Gosub, GetNumsFromComplexConstring
-ComplexConnection%ComplexConsCount% = %CConNum1%
-CConCount--
-LoopNumCC2 := 1
-Loop, %CConCount%
-{
-LoopNumCC2++
-CurrentCCON = % CConNum%LoopNumCC2%
-FullConnection = % ComplexConnection%ComplexConsCount%
-ComplexConnection%ComplexConsCount% = %FullConnection%☆%CurrentCCon%
-FullConnection = % ComplexConnection%ComplexConsCount%
-}
-ComplexConnection%ComplexConsCount% = %FullConnection%☆
-Continue
-}
-}
-GoSub, GetConnections
-WordConsWEW = ☆%WordCons%
-If WordClassFound = 1
-{
-WordConsWEW := StrReplace(WordConsWEW, "☆1☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆2☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆4☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆6☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆16☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆22☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆48☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆64☆", "☆")
-WordConsWEW := StrReplace(WordConsWEW, "☆68☆", "☆")
-WordCons := SubStr(WordConsWEW, 2)
-FirstChar := SubStr(WordCons, 1, 1)
-If FirstChar = ☆
-{
-WordCons := SubStr(WordCons, 2)
-}
-If WordCons =
-{
-Continue
-}
-}
-  ;gets rid of word classes
-If WordConsWEW contains ☆13☆
-{
-If WordClassFound = 1
-{
-Continue
-}
-Else
-{
-WordClassFound = 1
-Thoughts = (FindConnections) The wordnum is a word class, so I will not add its connections.
-Gosub, HedoneThink ;FindCon
-Continue
-}
-}
-ConsToFind = %ConsToFind%%WordCons%
-Thoughts = (FindConnections) found %WordCons%
-StarWordcons = ☆%WordCons%
-If IsComplex = 1
-{
-Constring = %WordCons%
-Gosub, GetNumsFromConstring
-Loopnumx := 0
-Loop, %ConCount%
-  ;gets rid of all complex connections
-{
-Loopnumx++
-CurrentConX = % ConNum%LoopNumX%
-If CurrentConX contains ☠
-{
-WordCons := StrReplace(WordCons, CurrentConX)
-Thoughts = (FindConnections) %CurrentConX% is complex, wordcons is now "%WordCons%".
-Gosub, HedoneThink
-}
-}
-SkullWordCons := StrReplace(WordCons, "☆", "☠")
-CurrentComplexCon = % RealComplexConnection%NumCTF%
-RealComplexConnection%NumCTF% = %CurrentComplexCon%%SkullWordCons%
-CurrentComplexCon = % RealComplexConnection%NumCTF%
-CurrentComplexCon := StrReplace(CurrentComplexCon, "☠☠", "☠")
-RealComplexConnection%NumCTF% = %CurrentComplexCon%
-Thoughts = (FindConnections) Complex connection is now "%CurrentComplexCon%"
-Gosub, HedoneThink ;FindCon
-}
-If IsComplex = 0
-{
-If AllCons contains StarWordcons
-{
-Thoughts = (FindConnections) I will not add this connection because it is already in the constring.
-Continue
-}
-AllCons = %AllCons%%WordCons%
-RealConstring = %Constring%
-Constring = %AllCons%
-Gosub, GetwordsFromConstring
-Constring = %RealConstring%
-Thoughts = (FindConnections) allcons of "%WordNeedingCons%" is now "%Allwords%".
-Gosub, HedoneThink ;FindCon
-}
-}
-}
-}
-AltAllCons = ☆%AllCons%
-If AltAllCons not contains ☆13☆
-{
-If TheWordNum != 0
-{
-AllCons = %AllCons%%TheWordNum%☆
-AltAllCons = ☆%AllCons%
-}
-}
-LoopNumCCC := 0
-Loop, %ComplexConsCount%
-{
-LoopNumCCC++
-CurrentCCprior = % ComplexConnectionPrior%LoopNumCCC%
-CurrentCCafter = % RealComplexConnection%LoopNumCCC%
-AllCons := StrReplace(AltAllCons, CurrentCCprior, CurrentCCafter)
-AltAllCons = %AllCons%
-AllCons := SubStr(AllCons, 2)
-}
-  ;replaces AllCons with an AllCons that has the correct Complex Connections
-ConsOfWord%Num% = %AllCons%
-AltConsOfWord%Num% = ☆%AllCons%
-TheCons = % AltConsOfWord%Num%
-TheWord = % Word%Num%
-RealConstring = %Constring%
-Constring = %TheCons%
-Gosub, GetwordsFromConstring
-Constring = %RealConstring%
-Thoughts = (FindConnections) The connections of "%TheWord%" are "%TheCons%"
-Gosub, HedoneThink ;FindCon
-Constring = %AllCons%
-Gosub, GetNumsFromConString
-NumK := 0
-  ;below, Hedone checks for duplicates and deletes the duplicates.
-Loop, %ConCount%
-{
-Numk++
-CurrentCon = % ConNum%NumK%
-CurrentCon = %CurrentCon%☆
-AltCurrentCon = ☆%CurrentCon%
-  ;gets the next connection in the string
-UselessVar := StrReplace(AltAllCons, AltCurrentCon,, NumberOfCons)
-  ;gets the amount of times this specific con is in the constring
-If AltAllCons contains %AltCurrentCon%%CurrentCon%
-{
-NumberOfCons++
-}
-If NumberOfCons > 1
-{
-RealConstring = %Constring%
-Constring = %AllCons%
-Gosub, GetwordsFromConstring
-Constring = %RealConstring%
-Thoughts = (FindConnections) %AltCurrentCon% is a duplicate. The concept's connections are now %allwords%
-Gosub, HedoneThink ;FindCon
-AllCons := StrReplace(AltAllCons, AltCurrentCon, ☆,, 1)
-AllCons := SubStr(AllCons, 2)
-AltAllCons = ☆%AllCons%
-RealConstring = %Constring%
-Constring = %AllCons%
-Gosub, GetwordsFromConstring
-Constring = %RealConstring%
-Thoughts = (FindConnections) %AltCurrentCon% is a duplicate. AllCons is now "%allwords%". numberofcons is %NumberOfCons%
-Gosub, HedoneThink ;FindCon
-}
-}
-  ;deletes all duplicates in the constring
-}
-Return
-
 FindConnections:
 MainThoughts = (FindConnections)
-Gosub, FindConnectionsInner
-  ;gets the connections of the words
 LoopFC := 0
 Loop, %WordCount%
 {
   ;one loop for every word in the clause
 LoopFC++
 CurrentWordFC = % Word%LoopFC%
-If CurrentWordFC contains ☻
+ConsOfWord%LoopFC% = 
+ConsOfCurrentWord = 
+ Thoughts = (FindConnections) GETTING CONS FOR NEW CONCEPT: "%CurrentWordFC%"
+ Gosub, HedoneThink
+WordNeedingCons = %CurrentWordFC%
+Gosub, ConsOfWord
+ConsToFind = %Constring%
+ Thoughts = (FindConnections) Immediate connections are "%Constring%"
+ Gosub, HedoneThink
+  ;gets the direct connections of the word
+If ConsToFind !=
 {
-Thoughts = (FindConnections) "%CurrentWordFC%" is not a word. Skipping this word.
-Gosub, HedoneThink
-Continue
+ConsToFind = ☥First☆%ConsToFind%
 }
-CurrentConsFC = % ConsOfWord%LoopFC%
-StarAllcons = ☆%CurrentConsFC%
-  ;gets the next word
-Constring = %CurrentConsFC%
-Gosub, GetNumsFromConstring
-LoopGFC := 0
-Loop, %ConCount%
+Loop,
 {
-LoopGFC++
-ConNumGFC%LoopGFC% = % ConNum%LoopGFC%
-ThisCon = % ConNumGFC%LoopGFC%
-ConCountGFC = %ConCount%
-}
-  ;renames all the cons
-LoopGFC2 := 0
-Loop, %ConCountGFC%
+  ;one loop for the first "ConsToFind", then more, if the cons have cons, and if those cons have cons, etc etc
+If ConsToFind contains ☥First
 {
-LoopGFC2++
-  ;one loop-through for each connection
-CurrentCon = % ConNumGFC%LoopGFC2%
-NumToFind = % ConNumGFC%LoopGFC2%
-NumOfconnectionGFC = % ConNumGFC%LoopGFC2%
-Gosub, GetWordOfNum
-WordOfConnectionGFC = %WordOfNum%
-ConceptForFCC = %WordOfNum%
-Gosub, AltFindConnectionsOfConcept
-ConsOfWordFCC := StrReplace(ConsOfWordFCC, "☰☰", "☰")
-Constring = %ConsOfWordFCC%
-Gosub, GetNumsFromConstring
-  ;turns all the connections that this connections has into variables
-LoopXYZ := 0
-Loop, %ConCount%
-{
-LoopXYZ++
-CurrentCon = % ConNum%LoopXYZ%
-StarCurrentCon = ☆%CurrentCon%☆
-If StarCurrentCon contains ☆13☆,☆INVALID☆
-  ;13 is "word class"
-{
-Thoughts = (Greater)(FindConnections) "%CurrentCon%" is "13" or "INVALID" so I will not add it to the constring.
-Gosub, HedoneThink
-Continue
-}
-If StarAllCons contains %StarCurrentCon%
-{
+IsTheFirstConsToFind = 1
 }
 Else
 {
-ConsOfWord%LoopFC% = %CurrentConsFC%%CurrentCon%☆
-CurrentConsFC = % ConsOfWord%LoopFC%
-StarAllcons = ☆%CurrentConsFC%
-Thoughts = (Greater)(FindConnections) "%StarAllCons%" now contains "%StarCurrentCon%".
-Gosub, HedoneThink
+IsTheFirstConsToFind = 0
+}
+If ConsToFind =
+{
+Break
+}
+Constring = %ConsToFind%
+Gosub, GetNumsFromConstring
+ConsToFind =
+  ;turns ConsToFind into variables, for the ConCount loop, then deletes the ConsToFind variable.
+LoopFC2 := 0
+Loop, %ConCount%
+{
+  ;One loop for every con in ConsToFind. In this loop, Hedone decides if each con should be added to the constring, and gets the cons of each con, to add to ConsToFind.
+LoopFC2++
+CurrentCon = % ConNum%LoopFC2%
+NumToFind = %CurrentCon%
+Gosub, GetWordOfNum
+CurrentConStars = ☆%CurrentCon%☆
+CurrentConWord = %WordOFNum%
+CurrentConWordStars = ☆%WordOFNum%☆
+ Thoughts = (FindConnections) Now looking for connections of the connection "%CurrentCon%" ("%WordOfNum%")
+ Gosub, HedoneThink
+If CurrentCon contains ☠
+{
+ComplexConsToFind = %CurrentCon%☆%ComplexConsToFind%
+ Thoughts = (FindConnections) This connection is complex, "ComplexConsToFind" is now "%ComplexConsToFind%".
+ Gosub, HedoneThink
+Continue
+}
+If CurrentCon contains ☥
+{
+ Thoughts = (FindConnections) Skip. The ankh means it isn't a real connection.
+ Gosub, HedoneThink
+Continue
+}
+If ConsOfCurrentWordStars contains %CurrentConStars%
+{
+ Thoughts = (FindConnections) Skip. This connection is already in ConsOfCurrentWord.
+ Gosub, HedoneThink
+Continue
+}
+If CurrentConWordStars contains ☆Word Class☆
+{
+If IsTheFirstConsToFind = 0
+{
+ Thoughts = (FindConnections) Skip. This connection is "word class", and is not a direct connection.
+ Gosub, HedoneThink
+Continue
+}
+}
+ConsOfWord%LoopFC% = %CurrentCon%☆%ConsOfCurrentWord%
+ConsOfCurrentWord = % ConsOfWord%LoopFC%
+ConsOfCurrentWordStars = ☆%ConsOfCurrentWord%
+ Thoughts = (FindConnections) Con has been added, constring is now "%ConsOfCurrentWord%"
+ Gosub, HedoneThink
+  ;if a con gets past those IF statements, it is added to the word's final constring.
+WordNum = %CurrentCon%
+Gosub, GetConnections
+If WordCons !=
+{
+ConsToFind = %WordCons%%ConsToFind%
+ Thoughts = (FindConnections) Currentcon's cons added to ConsToFind, it's now "%ConsToFind%"
+ Gosub, HedoneThink
 }
 }
 }
