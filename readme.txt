@@ -6,7 +6,7 @@ She's being made to solve very specific word problems, so there isn't much to do
 
 Here's what it does (with some exceptions), for everything it reads:
 
-1. Splits the message into clauses (usually just by noticing the periods and commas), and preforms actions 2- for each clause
+1. Splits the message into clauses (usually just by noticing the smiles and stars), and preforms actions 2- for each clause
 
 2. Turns the words into variables, editing them when needed. Plural words turn into their non-plural forms, certain words are joined and treated as if they're only one word (example: "Wonder Woman"), words with punctuation lose their punctuation. This is done so the AI knows which concept in its semantic network each word is referencing.
 
@@ -18,15 +18,13 @@ Here's what it does (with some exceptions), for everything it reads:
 
 Concepts in the concepts.txt and temp.txt files:
 
-This part of the readme is a lie. Periods are stars, commas are smiley faces and ^s are skulls.
-
 All numbers, except the exceptions noted below, refence a concept in the concepts file, even the numbers in the temp file. For example, the number "3" in a concepts file with ",noun.,verb.,adjective." would reference adjective because adjective is the third concept in the file.
 
 When linked to a concept, without a verb, Hedone assumes there is an "is always" between the concept and the noun. For example, ",Green.2.,color." would mean "Green is color" aka "Green is a color".
 
 ☰ means "this number is literally a number".
 
-^ is a space.
+skull is a space.
 
 H' before a connection means the connection is a hypothetical. (not yet implemented)
 
@@ -36,7 +34,7 @@ What it does with each word class:
 See: Adjective
 
 - Conjunction -
-if the word prior has a comma, it treats this word as the beginning of a new clause.
+if the word prior has a star, it treats this word as the beginning of a new clause.
 
 if the word is "if", it learns the clause is a hypothetical and sets "ConIsHypothetical" to 1 but that does nothing. Basically, it does nothing.
 
@@ -60,7 +58,7 @@ if the word contains a number, it'll be treated like a number (N put before it i
 - Adverb -
 Is the subject or object, depending on if a verb has been found. Does not increase objectcount/subjectcount, so it'll write over any previously found -bjects if the -bject count wasnt changed.
 
-if the word prior has a comma, it treats this word as the beginning of a new clause.
+if the word prior has a star, it treats this word as the beginning of a new clause.
 
 - Determiner -
 Ignores the word.

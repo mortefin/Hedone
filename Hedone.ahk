@@ -1389,13 +1389,14 @@ Word1 = WordstringWord
 RealConsOfWord1 = %ConsOfWord1%
 RealWordsOfWord1 = %WordsOfWord1%
 ConsOfWord1 = %ConstringForCIW%
+Tellcons = 0
 Gosub, TurnCOWintowords
 Word1 = %RealWord1%
 Wordstring = %WordsOfWord1%
 WordsOfWord1 = %RealWordsOfWord1%
 ConsOfWord1 = %RealConsOfWord1%
 Wordcount = %RealWordcount%
-Thoughts = (TurnConstringIntoWords) Words of constring %ConstringForCIW% are %Wordstring%.
+Thoughts = %MainThoughts%(TurnConstringIntoWords) Words of constring %ConstringForCIW% are %Wordstring%.
 Gosub, HedoneThink
 Return
 
@@ -2558,6 +2559,11 @@ FindPlurals = 0
 Return
 
 GetNumsFromComplexConstring:
+FirstLetter := SubStr(Constring, 1, 1)
+If FirstLetter != ☆
+{
+Constring = ☆%Constring%
+}
 ConVar := 0
 ConVar2 := 1
 LoopNumGNFCC := 0
@@ -2593,6 +2599,8 @@ LoopFC++
 CurrentWordFC = % Word%LoopFC%
 ConsOfWord%LoopFC% = 
 ConsOfCurrentWord = 
+ConsOfCurrentWordStars = 
+ComplexConsToFind =
  Thoughts = (FindConnections) GETTING CONS FOR NEW CONCEPT: "%CurrentWordFC%"
  Gosub, HedoneThink
 WordNeedingCons = %CurrentWordFC%
@@ -2680,6 +2688,33 @@ ConsToFind = %WordCons%%ConsToFind%
  Gosub, HedoneThink
 }
 }
+}
+  ;The following code is for complex connections, it happens for each word after all the "ConsToFind" are found.
+ Thoughts = (FindConnections) Now doing complex connections, ComplexConsToFind is "%ComplexConsToFind%"
+ Gosub, HedoneThink
+Constring = %ComplexConsToFind%
+Gosub, GetNumsFromConstring
+LoopFC3 := 0
+Loop, %ConCount%
+{
+  ;one loop for every complex connection in "ComplexConsToFind"
+LoopFC3++
+CurrentComplexCon = % ConNum%LoopFC3%
+ConstringForCIW = %CurrentComplexCon%
+Gosub, TurnConstringIntoWords
+ Thoughts = (FindConnections) Now doing complex con "%CurrentComplexCon%" ("%Wordstring%")
+ Gosub, HedoneThink
+Constring = %CurrentComplexCon%
+Gosub, GetNumsFromComplexConstring
+LoopFC4 := 0
+Loop, %cConCount%
+{
+  ;one loop for every word-number in the complex connection
+LoopFC4++
+CurrentWordnum = % cConNum%LoopFC4%
+ Thoughts = (FindConnections) Now doing wordnum "%CurrentWordnum%"
+ Gosub, HedoneThink
+
 }
 }
 Return

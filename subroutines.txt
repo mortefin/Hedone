@@ -30,7 +30,7 @@ GetNumOfWord gets the number of commas for the word %WordToFind%, saved as %Word
 
 GetWordOfNum gets the word of word-number %NumToFind%, saved as %WordOfNum%
 
-GetNumsFromComplexConstring gets %cConCount%, cConNum%1%, cConNum%2% etc from the complex connection's %ConString% (be sure the constring starts with a skull)
+GetNumsFromComplexConstring gets %cConCount%, cConNum%1%, cConNum%2% etc from the complex connection's %ConString% 
 
 CheckRelationship needs %WordForCR% and %CRword[number]% (as many words as wanted, ONLY the literal concepts, no skulls or anything). If they're in the same complex connection, CRvalue is 1, otherwise it's 0.
 
