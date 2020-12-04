@@ -12,9 +12,11 @@ GetImmediateReferences (incomplete) gets the immediate references of the concept
 
 FindConnections gets the cons of the words the player sent Hedone and all the cons of the cons it has, plus the cons of those cons, etc stored as %ConsOfWord1%, %ConsOfWord2%, etc (does not start with a star, but ends with a star). When it finds a new clause, it changes WordCount so that it ends before the first word of the found clause annd sets ClauseFound to 1.
 
-GetReverseConstring gets the references to a concept (save it as WordConNumForGRR), and the references of those references, etc, taking into account numbers in the references.
+GetReverseConstring gets the references to a concept (save it as WordNumForGRC), and the references of those references, etc, taking into account numbers in the references.
 
-GetFullConnection returns %FullCon%, with the full connection. %TheCons% must contain the constring the desired connection is in. %ConStart% must contain the beginning of the con (ex: .23'). Constring must begin with a period.
+GetReferencesToCon gets the references to the concept %ConNeedingRefs%, in AllFiles2. Outputs %ParentOfRef[num]num%, %ParentOfRef[num]word%, %Ref[num]IsComplex%, %Ref[num]% (complex refs only), %ReferenceCount%
+
+GetFullConnection returns %FullCon%, with the full connection. %TheCons% must contain the constring the desired connection is in. %ConStart% must contain the beginning of the con (ex: ☻23☆). Constring must begin with a period.
 
 ConsOfWordInFileForSemParse See: ConsOfword, but this one uses FileForSemParse
 
@@ -48,7 +50,7 @@ Getwordstring2 turns a constring made of numbers into a constring made of the wo
 
 - - - - - For strings:
 
-SimplifyCharacters replaces weird characters (example, ”) with normal ones the code can recognize (example, "). Requires SCtext, outputs the same variable, but with simplified characters.
+SimplifyCharacters replaces weird characters (example, ”) with normal ones the code can recognize (example, "). Requires %SCtext%, outputs the same variable but with simplified characters.
 
 FindBetweenFirstLast gets the string between %First% and %Last%, with %StringFragment% between them, in %FullString%. Returns %BetweenFirstLast%. If UseStringFragment = 0 (as it usually is), it does not look for the fragment.
 

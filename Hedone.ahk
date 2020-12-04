@@ -2592,30 +2592,79 @@ Return
 FindConnections:
 MainThoughts = (FindConnections)
 LoopFC := 0
+ComplexConCount = 0
 Loop, %WordCount%
 {
   ;one loop for every word in the clause
 LoopFC++
+LoopCCCFC := 0
+Loop, %ComplexConCount%
+{
+LoopCCCFC++
+ComplexConFC%LoopCCCFC% =
+}
 CurrentWordFC = % Word%LoopFC%
+WordToFind = %CurrentWordFC%
+Gosub, GetNumOfWord
 ConsOfWord%LoopFC% = 
 ConsOfCurrentWord = 
 ConsOfCurrentWordStars = 
 ComplexConsToFind =
  Thoughts = (FindConnections) GETTING CONS FOR NEW CONCEPT: "%CurrentWordFC%"
  Gosub, HedoneThink
+ConsToAdd = % ConsForWord%LoopFC%
+ConsForWord%LoopFC% =
+If CurrentWordFC contains a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
+{
+}
+Else
+{
+If CurrentWordFC contains 1,2,3,4,5,6,7,8,9,0
+{
+Thoughts = %MainThoughts%(GetNumOfWord) The word is a number. I will put an ☰ before the number, and say the wordnum is that. Also, I will add "number" to the constring.
+Gosub, HedoneThink
+ConsToAdd = ☰%CurrentWordFC%☆16☆%ConsToAdd%
+}
+}
 WordNeedingCons = %CurrentWordFC%
 Gosub, ConsOfWord
-ConsToFind = %Constring%
- Thoughts = (FindConnections) Immediate connections are "%Constring%"
+If Constring !=
+{
+ConsToFind = %Constring%☆%ConsToAdd%
+}
+Else
+{
+If ConsToAdd !=
+{
+ConsToFind = %ConsToAdd%
+}
+}
+  ;ensures ConsToFind doesn't start with a star
+WordToFind = %CurrentWordFC%
+Gosub, GetNumOfWord
+ConsOfWord%LoopFC% = %Wordnum%☆
+ConsOfCurrentWord = % ConsOfWord%LoopFC%
+ConsOfCurrentWordStars = ☆%ConsOfCurrentWord%
+  ;adds the word to its constring
+WordNumForGRC = %Wordnum%
+Gosub, GetReverseConstring
+Constring = %ConsToAdd%
+Gosub, GetWordsFromConstring
+ Thoughts = (FindConnections) Immediate connections are "%Constring%", cons found earlier are "%ConsToAdd%" ("%AllWords%")
  Gosub, HedoneThink
   ;gets the direct connections of the word
 If ConsToFind !=
 {
 ConsToFind = ☥First☆%ConsToFind%
 }
+ComplexConsSplit = 0
+ComplexConCount := 0
+IsForComplex = 0
 Loop,
 {
   ;one loop for the first "ConsToFind", then more, if the cons have cons, and if those cons have cons, etc etc
+ Thoughts = (FindConnections) ConsToFind is %ConsToFind%
+ Gosub, HedoneThink
 If ConsToFind contains ☥First
 {
 IsTheFirstConsToFind = 1
@@ -2626,13 +2675,79 @@ IsTheFirstConsToFind = 0
 }
 If ConsToFind =
 {
+ Thoughts = (FindConnections) ConsToFind does not exist.
+ Gosub, HedoneThink
+If ComplexConCount < TotalComplexCons
+{
+If ComplexConsSplit = 0
+{
+If ComplexConsToFind =
+{
+ Thoughts = (FindConnections) All cons have been found, and there are no complex cons to find.
+ Gosub, HedoneThink
 Break
+}
+ Thoughts = (FindConnections) All normal cons have been found, now doing complex cons "%ComplexConsToFind%"
+ Gosub, HedoneThink
+Constring = %ComplexConsToFind%
+Gosub, GetNumsFromConstring
+LoopFC5 := 0
+Loop, %ConCount%
+{
+LoopFC5++
+ComplexConFC%LoopFC5% = % ConNum%LoopFC5%
+}
+TotalComplexCons = %LoopFC5%
+IsNewComplexCon = 1
+ComplexConCount++
+ComplexConsSplit = 1
+CurrentComplexCon = % ComplexConFC%ComplexConCount%
+ Thoughts = (FindConnections) Now doing complex con "%CurrentComplexCon%"
+ Gosub, HedoneThink
+}
+Else
+{
+  ;if the first complex connection was already done
+IsNewComplexCon = 1
+ComplexConCount++
+CurrentComplexCon = % ComplexConFC%ComplexConCount%
+If CurrentComplexCon =
+{
+ Thoughts = (FindConnections) All cons have been found, complex and simple.
+ Gosub, HedoneThink
+Break
+}
+ Thoughts = (FindConnections) Now doing complex con "%CurrentComplexCon%"
+ Gosub, HedoneThink
+}
+  ;code above gets the CurrentComplexCon, code below splits it into its cons and adds them to ConsToFind
+Constring = %CurrentComplexCon%
+Gosub, GetNumsFromComplexConstring
+LoopFC6 := 0
+Loop, %cConCount%
+{
+LoopFC6++
+CurrentWordnum1 = % cConNum%LoopFC6%
+ConsToFind = %CurrentWordnum1%☆%ConsToFind%
+}
+ Thoughts = (FindConnections) I added all cons from the complex con to ConsToFind, it is now "%ConsToFind%"
+ Gosub, HedoneThink
+IsForComplex = 1
+}
+Else
+{
+ Thoughts = (FindConnections) All cons, complex and otherwise, have been found.
+ Gosub, HedoneThink
+Break
+}
 }
 Constring = %ConsToFind%
 Gosub, GetNumsFromConstring
 ConsToFind =
   ;turns ConsToFind into variables, for the ConCount loop, then deletes the ConsToFind variable.
 LoopFC2 := 0
+ Thoughts = (FindConnections) ConCount is %ConCount%
+ Gosub, HedoneThink
 Loop, %ConCount%
 {
   ;One loop for every con in ConsToFind. In this loop, Hedone decides if each con should be added to the constring, and gets the cons of each con, to add to ConsToFind.
@@ -2643,13 +2758,33 @@ Gosub, GetWordOfNum
 CurrentConStars = ☆%CurrentCon%☆
 CurrentConWord = %WordOFNum%
 CurrentConWordStars = ☆%WordOFNum%☆
- Thoughts = (FindConnections) Now looking for connections of the connection "%CurrentCon%" ("%WordOfNum%")
+ Thoughts = (FindConnections) Now looking for connections of the connection "%CurrentCon%" ("%WordOfNum%") and deciding if it should be added to the word's constring
  Gosub, HedoneThink
+If IsForComplex = 1
+{
+If CurrentConWordStars contains ☆noun☆,☆verb☆,☆adjective☆,☆conjunction☆,☆adverb☆
+{
+ Thoughts = (FindConnections) Skip. This connection is a word class, those shouldn't be in complex connections.
+ Gosub, HedoneThink
+Continue
+}
+If CurrentComplexConSkull contains ☠%CurrentCon%☠
+{
+ Thoughts = (FindConnections) Skip. This connection is already in CurrentComplexCon ("%CurrentComplexCon%")
+ Gosub, HedoneThink
+Continue
+}
+}
 If CurrentCon contains ☠
 {
 ComplexConsToFind = %CurrentCon%☆%ComplexConsToFind%
  Thoughts = (FindConnections) This connection is complex, "ComplexConsToFind" is now "%ComplexConsToFind%".
  Gosub, HedoneThink
+Continue
+}
+If CurrentCon =
+{
+ Thoughts = (FindConnections) Skip. This con does not exist.
 Continue
 }
 If CurrentCon contains ☥
@@ -2673,12 +2808,47 @@ If IsTheFirstConsToFind = 0
 Continue
 }
 }
+  ;all "if"s have been passed without problem, meaning the con should be added to the constring
+WordNumForGRC = %CurrentCon%
+Gosub, GetReverseConstring
+ Thoughts = (FindConnections) Cons found by GetReverseConstring are "%ReverseConstring%"
+ Gosub, HedoneThink
+If IsForComplex = 1
+{
+If IsNewComplexCon = 1
+{
+CurrentComplexCon = %CurrentCon%☠
+CurrentComplexConSkull = ☠%CurrentComplexCon%
+ConsOfWord%LoopFC% = ☠%CurrentComplexCon%☆%ConsOfCurrentWord%
+ConsOfCurrentWord = % ConsOfWord%LoopFC%
+ConsOfCurrentWordStars = ☆%ConsOfCurrentWord%
+IsNewComplexCon = 0
+ Thoughts = (FindConnections) This con is for a complex con. ConsOfWord is now "%ConsOfCurrentWord%"
+ Gosub, HedoneThink
+}
+Else
+{
+OldComplexCon = %CurrentComplexCon%
+CurrentComplexCon = %CurrentCon%☠%CurrentComplexCon%
+CurrentComplexConSkull = ☠%CurrentComplexCon%
+ConsOfCurrentWord = % ConsOfWord%LoopFC%
+ConsOfWord%LoopFC% := StrReplace(ConsOfCurrentWord, OldComplexCon, CurrentComplexCon, , 1)
+ConsOfCurrentWord = % ConsOfWord%LoopFC%
+ConsOfCurrentWordStars = ☆%ConsOfCurrentWord%
+ Thoughts = (FindConnections) This con is for a complex con. ConsOFWord is now "%ConsOfCurrentWord%"
+ Gosub, HedoneThink
+}
+}
+Else
+{
+  ;if currentcon is not for a complex con
 ConsOfWord%LoopFC% = %CurrentCon%☆%ConsOfCurrentWord%
 ConsOfCurrentWord = % ConsOfWord%LoopFC%
 ConsOfCurrentWordStars = ☆%ConsOfCurrentWord%
- Thoughts = (FindConnections) Con has been added, constring is now "%ConsOfCurrentWord%"
+ Thoughts = (FindConnections) Con has been added, ConsOfWord is now "%ConsOfCurrentWord%"
  Gosub, HedoneThink
   ;if a con gets past those IF statements, it is added to the word's final constring.
+}
 WordNum = %CurrentCon%
 Gosub, GetConnections
 If WordCons !=
@@ -2689,165 +2859,96 @@ ConsToFind = %WordCons%%ConsToFind%
 }
 }
 }
-  ;The following code is for complex connections, it happens for each word after all the "ConsToFind" are found.
- Thoughts = (FindConnections) Now doing complex connections, ComplexConsToFind is "%ComplexConsToFind%"
- Gosub, HedoneThink
-Constring = %ComplexConsToFind%
-Gosub, GetNumsFromConstring
-LoopFC3 := 0
-Loop, %ConCount%
-{
-  ;one loop for every complex connection in "ComplexConsToFind"
-LoopFC3++
-CurrentComplexCon = % ConNum%LoopFC3%
-ConstringForCIW = %CurrentComplexCon%
-Gosub, TurnConstringIntoWords
- Thoughts = (FindConnections) Now doing complex con "%CurrentComplexCon%" ("%Wordstring%")
- Gosub, HedoneThink
-Constring = %CurrentComplexCon%
-Gosub, GetNumsFromComplexConstring
-LoopFC4 := 0
-Loop, %cConCount%
-{
-  ;one loop for every word-number in the complex connection
-LoopFC4++
-CurrentWordnum = % cConNum%LoopFC4%
- Thoughts = (FindConnections) Now doing wordnum "%CurrentWordnum%"
- Gosub, HedoneThink
-
-}
 }
 Return
   ;FindConnections gets the cons of a word and all the cons of the cons it has, plus the cons of those cons, etc
 
 GetReverseConstring:
-EndReached = 0
-FoundConceptRef =
-AmountFound = 1
-AllFilesRC = %AllFiles2%
-Loop,
+  ;a "Reference" is a connection that contains the concept that is being reverse-looked for. A parent is the connection that has the reference.
+MainThoughts = (GetReverseConstring)
+ConNeedingRefs = %WordNumForGRC%
+Gosub, GetReferencesToCon
+LoopGRC := 0
+Loop, %Referencecount%
 {
-WordNumSkull = ☠%WordConNumForGRC%☠
-WordNumStar = ☆%WordConNumForGRC%☆
-SkullWordNumPos := InStr(AllFilesRC, WordNumSkull)
-StarWordNumPos := InStr(AllFilesRC, WordNumStar)
-If SkullWordNumPos = 0
+LoopGRC++
+CurrentParentWord = % ParentOfRef%LoopGRC%Word
+CurrentParentWordStars = ☆%CurrentParentWord%☆
+If CurrentParentWordStars contains ☆noun☆,☆verb☆,☆determiner☆,☆adjective☆,☆preposition☆,☆adverb☆
 {
-If StarWordNumPos = 0
-{
-Thoughts = %MainThoughts%(GetReverseConstring) No further references found.
-Gosub, HedoneThink
-If AmountFound != 1
-{
-AllCons = %AllCons%☠☰%AmountFound%☠67☠☆
-ConsToFind = %ConsToFind%☠☰%AmountFound%☠67☠☆
-GoSub, GetNumsFromConString
-}
-Thoughts = %MainThoughts%(GetReverseConstring) AllCons is now "%AllCons%".
-Gosub, HedoneThink
-Break
-}
-}
-If SkullWordNumPos != 0
-{
-LastStar := InStr(AllFilesRC, "☆",, SkullWordNumPos)
-LoopNumFCC = %SkullWordNumPos%
-Loop,
-{
-LoopNumFCC--
-FirstStar := SubStr(AllFilesRC, LoopNumFCC, 1)
-If FirstStar = ☆
-{
-LoopNumFCC++
-FirstStar = %LoopNumFCC%
-Break
-}
-}
-LengthFCC := LastStar - FirstStar
-FullComplexConstring := SubStr(AllFilesRC, FirstStar, LengthFCC)
-Thoughts = %MainThoughts%(GetReverseConstring) The full referenced constring is "%FullComplexConstring%"
-Gosub, HedoneThink
-If FullComplexConstring contains ☠155☠
-  ;155 is "divided"
-{
-AllFilesRC := StrReplace(AllFilesRC, FullComplexConstring, "☠")
-Thoughts = %MainThoughts%(GetReverseConstring) The referenced constring contains "divided", so I will skip it.
+Thoughts = %MainThoughts% Skip. Reference "%LoopGRC%"s parent ("%CurrentParentWord%") is a word class.
 Gosub, HedoneThink
 Continue
 }
-Npos := InStr(FullComplexConstring, "☰")
-If Npos != 0
-{
-SkullAfterN := InStr(FullComplexConstring, "☠",, Npos)
-Npos++
-LengthN := SkullAfterN - Npos
-If LengthN = 0
-{
-LengthN = 1
+  ;checks to see if any of them are valid parents
 }
-ComplexNumber := SubStr(FullComplexConstring, Npos, LengthN)
-AmountFound := (AmountFound*ComplexNumber)
-Thoughts = %MainThoughts%(GetReverseConstring) Found number "%ComplexNumber%" in the complexconstring, AmountFound is now "%AmountFound%"
-Gosub, HedoneThink
-}
-}
-If StarWordNumPos != 0
-{
-LastStar = %StarWordNumPos%
-}
-FileLength := StrLen(AllFiles2)
-OffsetN := LastStar - FileLength
-SmilePosREF := InStr(AllFiles2, "☻",, OffsetN)
-StarPosREF := InStr(AllFiles2, "☆",, SmilePosREF)
-SmilePosREF++
-LengthREF := StarPosRef - SmilePosRef
-PrevFoundConceptREF = %FoundConceptREF%
-FoundConceptREF := SubStr(AllFiles2, SmilePosREF, LengthREF)
-Thoughts = %MainThoughts%(GetReverseConstring) The referenced constring belongs to "%FoundConceptREF%"
-Gosub, HedoneThink
-If FoundConceptRef = %PrevFoundConceptREF%
-{
-Thoughts = %MainThoughts%(GetReverseConstring) ERROR: Concept is referenced by itself. Ending "GetReverseConstring".
-Gosub, HedoneThink
 Return
-}
-WordNeedingCons = %FoundConceptREF%
-WordToFind = %FoundConceptREF%
-Gosub, GetNumOfWord
-Gosub, ConsOfWord
-FixedConstring = ☆%ConString%
-If FixedConString contains ☆88☆
-{
-If FixedConString contains ☆68☆
-{
-EndReached = 1
-}
-}
-If EndReached = 1
-{
-If AmountFound != 1
-{
-If AmountFound != 0
-{
-AllCons = %AllCons%☠☰%AmountFound%☠%WordNum%☠☆
-ConsToFind = %ConsToFind%☠☰%AmountFound%☠%WordNum%☠☆
-GoSub, GetNumsFromConString
-}
-}
-Else
-{
-If AmountFound != 0
-{
-AllCons = %AllCons%%WordNum%☆
-}
-}
-Thoughts = %MainThoughts%(GetReverseConstring) AllCons is now "%AllCons%".
-Gosub, HedoneThink
-Return
-}
-WordConNumForGRC = %WordNum%
-}
   ;finds references to the word
+
+GetReferencesToCon:
+NumToFind = %ConNeedingRefs%
+Gosub, GetWordOfNum
+ConNeedingRefsStars = ☆%ConNeedingRefs%☆
+ConNeedingRefsSkulls = ☠%ConNeedingRefs%☠
+WorthlessString := StrReplace(AllFiles2, ConNeedingRefsStars,, SimpleReferenceCount)
+WorthlessString := StrReplace(AllFiles2, ConNeedingRefsSkulls,, ComplexReferenceCount)
+TotalReferenceCount := SimpleReferenceCount + ComplexReferenceCount
+Thoughts = %MainThoughts%(GetReferencesToCon) Now finding the "%SimpleReferenceCount%" simple and "%ComplexReferenceCount%" complex refs to "%WordOfNum%", and their parents. TotalReferenceCount is "%TotalReferenceCount%"
+Gosub, HedoneThink
+LoopGRTC:= 0
+Loop, %SimpleReferenceCount%
+{
+LoopGRTC++
+CurrentConPos := InStr(AllFiles2, ConNeedingRefsStars, , , LoopGRTC)
+NextSmileposGRTC := InStr(AllFiles2, "☻", , CurrentConPos)
+StarAfterSmilePosGRTC := InStr(AllFiles2, "☆", , NextSmileposGRTC)
+NextSmilePosGRTC++
+Length := StarAfterSmilePosGRTC - NextSmileposGRTC
+WordToFind := SubStr(AllFiles2, NextSmilePosGRTC, Length)
+Gosub, GetNumOfWord
+Wordnum--
+NumToFind = %Wordnum%
+Gosub, GetWordOfNum
+CurrentReferenceWord = %WordOFNum%
+  ;gets the wordnum of the parent and sets it as the next reference
+ParentOfRef%LoopGRTC%Num = %NumToFind%
+ParentOfRef%LoopGRTC%Word = %WordOFNum%
+Ref%LoopGRTC%IsComplex = 0
+Thoughts = %MainThoughts%(GetReferencesToCon) Parent of reference %LoopGRTC% is "%CurrentReferenceWord%".
+Gosub, HedoneThink
+}
+Loop, %ComplexReferenceCount%
+{
+LoopGRTC++
+CurrentConPos := InStr(AllFiles2, ConNeedingRefsSkulls, , , LoopGRTC)
+NextSmileposGRTC := InStr(AllFiles2, "☻", , CurrentConPos)
+StarAfterSmilePosGRTC := InStr(AllFiles2, "☆", , NextSmileposGRTC)
+NextSmilePosGRTC++
+Length := StarAfterSmilePosGRTC - NextSmileposGRTC
+WordToFind := SubStr(AllFiles2, NextSmilePosGRTC, Length)
+Gosub, GetNumOfWord
+Wordnum--
+NumToFind = %Wordnum%
+Gosub, GetWordOfNum
+CurrentReferenceWord = %WordOFNum%
+CurrentReferenceWordSmile = ☻%WordOFNum%☆
+ParentOfRef%LoopGRTC%Num = %NumToFind%
+ParentOfRef%LoopGRTC%Word = %WordOFNum%
+  ;gets the wordnum of the parent and sets it as the next reference
+NextStarposGRTC := InStr(AllFiles2, "☆", , CurrentConPos)
+NegativeConPosGRTC := CurrentConPos - StrLen(AllFiles2)
+PreviousStarposGRTC := InStr(AllFiles2, "☆", , NegativeConPosGRTC)
+PreviousStarPosGRTC++
+Length := NextStarPosGRTC - PreviousStarPosGRTC
+FullRef := SubStr(AllFiles2, PreviousStarPosGRTC, Length)
+  ;gets the full reference
+Ref%LoopGRTC%IsComplex = 1
+Thoughts = %MainThoughts%(GetReferencesToCon) Parent of complex reference %LoopGRTC% is "%CurrentReferenceWord%", the full reference is "%FullRef%", NegativeConPos is %NegativeConPosGRTC%
+Gosub, HedoneThink
+}
+Return
+  ;gets the references to a single concept
+Return
 
 GetWordOfNum:
 FirstSymbol =
