@@ -38,9 +38,9 @@ CheckRelationship needs %WordForCR% and %CRword[number]% (as many words as wante
 
 - - - - - For constrings (connection strings):
 
-GetNumsFromConString gets %ConCount%, ConNum%1%, ConNum%2% etc from %ConString% (be sure the constring does not start with a star)
+GetNumsFromConString gets %ConCount%, ConNum%1%, ConNum%2% etc from %ConString%
 
-GetWordsFromConString gets %WordNum1%, %WordNum2%, etc (the words in the connection-string) and %AllWords% from %ConString%.
+GetWordsFromConString gets %WordNum1%, %WordNum2%, etc (the words in the connection-string) and %AllWords% from %ConString%. Constring should be wordnums.
 
 TurnCOWintoWords gets the connected words of each word, saving them as %WordsOfWord1%, %WordsOfWord2%, etc
 
@@ -72,7 +72,7 @@ CreateAllFilesVar creates AllFilesVar variables.
 
 IdentifyWordClass uses the word class (noun, verb, etc) found in WordsOfWord%num% to find the subjects, actions and objects
 
-AddConToConcept requires %ConceptForACTC% and %ConnectionForACTC%. Connection should be numbers, like they are in the file. Connection should start with no star but end with a star. Adds the connection to the concept, in the %FileNameForSemParse% file. 
+AddConToConcept requires %ConceptForACTC% and %ConnectionForACTC%. Connection should be wordnums, like they are in the files. Connection should start with no star but end with a star. Adds the connection to the concept, in the %FileNameForSemParse% file. 
 
 SolveWordProblem uses SemanticParsing to find the subjects, etc and uses them to update a temp file or answer a question.
 
