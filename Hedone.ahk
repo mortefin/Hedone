@@ -360,7 +360,7 @@ GoSub, AddConnectionToFile
 Gosub, HedoneSend
 Return
 
-SemanticParsing:
+SemanticParsingResetVariables:
 TellCons = 1
  MainThoughts =
 OnlyOneConnection = 0
@@ -424,6 +424,10 @@ OnlyOneConnection = 0
  categtrue = 0
  FoundVerb = 0
   ;resets variables
+Return
+
+SemanticParsing:
+Gosub, SemanticParsingResetVariables
 If FileNameForSemParse !=
 {
 IfNotExist, %FileNameForSemParse%.txt
@@ -444,11 +448,12 @@ Gosub, FindWords
   ;Turns the message into words
 Gosub, FindAltWords
   ;Finds the concepts, multi-word concepts, plural multi-words and plural words in the message and adjusts the variables accordingly. Also finds punctuation.
-Gosub, DefineProforms
 Gosub, FindConnections
   ;Gets the full constrings (all the connections the concept has) of the concepts
 GoSub, TurnCOWintoWords
-  ;turn the concept's constring into actual words
+  ;turn the concepts' constrings into actual words
+Gosub, VerbOrNoun
+Gosub, DefineProforms
 Thoughts = I will now examine the sentence. There are %WordCount% words to check.
 Gosub, HedoneThink
 Gosub, IdentifyWordClass
@@ -635,23 +640,18 @@ Return
   ;gets the connections of a single concept
 
 DefineProforms:
-LoopnumDP := 0
+LoopDP := 0
 Loop, %WordCount%
 {
-LoopNumDP++
-WordNeedingCons = % Word%LoopNumDP%
-Gosub, ConsOfWord
-  ;gets the direct connections of the word
-constringwew = ☆%constring%
-If constringwew contains ☆148☆
-  ;148 is proform
+LoopDP++
+CurrentWordsOfWordDP = % WordsOfWord%LoopDP%
+CurrentWordDP = % Word%LoopDP%
+Thoughts = (DefineProforms) Current word is "%CurrentWordDP%", its constring is %CurrentWordsOfWordDP%
+Gosub, HedoneThink
+If CurrentWordsOfWordDP contains ☆Proform☆
 {
-If constringwew contains ☆68☆
-   ;68 is adverb
-{
-;word%LoopNumDP% = here
-constringwew = ☆%constring%
-}
+Thoughts = (DefineProforms) Now defining proform "%CurrentWordDP%"
+Gosub, HedoneThink
 }
 }
 Return
@@ -1585,6 +1585,51 @@ ConsForWord%LoopNumFAW% = %ConsToAdd%☠36☠132☠☆
 Gosub, FindMultiWordConcepts
 Return
 
+VerbOrNoun:
+LoopVON := 0
+Loop, %WordCount%
+{
+LoopVON++
+PrevLoopVON := LoopVon - 1
+NextLoopVON := LoopVon + 1
+CurrentWordVON = % Word%LoopVON%
+CurrentWordStarsVON = ☆%CurrentWordVON%☆
+CurrentWordsOfWordVON = % WordsOfWord%LoopVON%
+PrevWordsOfWordVON = % WordsOfWord%PrevLoopVON%
+NextWordsOfWordVON = % WordsOfWord%NextLoopVON%
+Wordclass1 = Verb
+Wordclass2 = Adjective
+Wordclass3 = Noun
+Wordclass4 = Pronoun
+Wordclass5 = Adverb
+Wordclass6 = Conjunction
+Wordclass7 = Preposition
+LoopVONWC := 0
+Loop, 7
+{
+LoopVONWC++
+CurrentWordClass = % WordClass%LoopVONWC%
+currentWordClassStars = ☆%CurrentWordClass%☆
+If CurrentWordsOfWordVON contains %CurrentWordClassStars%
+{
+  WordClassOfWord = %CurrentWordClass%
+}
+}
+   ;figures out which word class the word currently is
+If CurrentWordStarsVON contains ☆that☆
+{
+  Thoughts = (VerbOrNoun) This word is "that"
+  Gosub, HedoneThink
+If NextWordsOfWordVON contains ☆verb☆
+{
+  Thoughts = (VerbOrNoun) This word is "that", and the next word is a verb, so this word is a pronoun.
+  Gosub, HedoneThink
+}
+}
+;Anne has 1092 bananas that must be put away in boxes.
+}
+Return
+
 LoopingFindQuoteMarks:
 Loop,
 {
@@ -2055,8 +2100,7 @@ If WordsOfWord%WordNumVar% contains ☆determiner☆
 {
 If Object1 !=
 {
-NextWordNum := WordNumVar + 1
-StartOfClause = % Word%NextWordNum%
+StartOfClause = % Word%WordNumVar%
 WordCount = %LastWordNum%
 ClauseFound = 1
 FindHowMany = 0
