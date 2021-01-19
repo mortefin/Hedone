@@ -72,7 +72,7 @@ CreateAllFilesVar creates AllFilesVar variables.
 
 IdentifyWordClass uses the word class (noun, verb, etc) found in WordsOfWord%num% to find the subjects, actions and objects
 
-AddConToConcept requires %ConceptForACTC% and %ConnectionForACTC%. Connection should be wordnums, like they are in the files. Connection should start with no star but end with a star. Adds the connection to the concept, in the %FileNameForSemParse% file. 
+AddConToConcept requires %ConceptForACTC% and %ConnectionForACTC%. Connection should be wordnums, like they are in the files. Connection should start with no star☆ but end with a star☆. Adds the connection to the concept, in the %FileNameForSemParse% file. 
 
 SolveWordProblem uses SemanticParsing to find the subjects, etc and uses them to update a temp file or answer a question.
 

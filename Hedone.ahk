@@ -8,6 +8,7 @@ ClauseExaminer = WordProblem
 AreThoughtsDisabled = 0
 FoundQuote = 0
 UseStringFragment = 0
+ClauseCount := -1
 RunCount = 0
 ShowFindCon = 0
 ShowFindWords = 0
@@ -353,6 +354,7 @@ Gosub, OnlyOneConnection
 }
 Else
 {
+Gosub, AddImplicationsToFile
 GoSub, AddConnectionToFile
   ;attaches the subjects to the objects, in the file
 }
@@ -360,7 +362,48 @@ GoSub, AddConnectionToFile
 Gosub, HedoneSend
 Return
 
+AddImplicationsToFile:
+NumberAITF := 0
+MainThoughts = (AddImplicationsToFile)
+LoopACT := 0
+Loop, %ActionCount%
+{
+LoopACT++
+CurrentACT = % Action%LoopACT%
+CurrentACT = ☻%CurrentACT%☻
+If CurrentACT contains ☻has☻
+{
+LoopOBJ := 0
+Loop, %ObjectCount%
+{
+  LoopOBJ++
+  CurrentOBJ = % Object%LoopOBJ%
+  CurrentAdjCount = % AdjCountForObj%LoopOBJ%
+  LoopADJ := 0
+  Loop, %CurrentAdjCount%
+  {
+  LoopADJ++
+  CurrentADJ = % Adj%LoopADJ%OfObject%LoopOBJ%
+  If CurrentADJ contains 1,2,3,4,5,6,7,8,9,0
+  If CurrentADJ not contains a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
+  {
+  NumberAITF = %CurrentADJ%
+  ObjectAITF = %CurrentOBJ%
+  Thoughts = (AddImplicationsToFile) The subject "has" "%NumberAITF%" "%ObjectAITF%". Therefore, there are "%NumberAITF%" "%ObjectAITF%".
+Gosub, HedoneThink
+ConceptForACTC = %ObjectAITF%
+ConnectionForACTC = ☰%NumberAITF%☆
+Gosub, AddConToConcept
+  Break 3
+  }
+  }
+}
+}
+}
+Return
+
 SemanticParsingResetVariables:
+ClauseCount++
 TellCons = 1
  MainThoughts =
 OnlyOneConnection = 0
@@ -388,6 +431,7 @@ OnlyOneConnection = 0
   }
  AdjCountForSub%LoopNumwtf% =
  PrevClauseSubject%Loopnumwtf% = % Subject%Loopnumwtf%
+ Subject%Loopnumwtf%Clause%ClauseCount% = % Subject%Loopnumwtf%
  Subject%Loopnumwtf% =
  }
  Loopnum3 := 0
@@ -416,6 +460,7 @@ OnlyOneConnection = 0
  Loop, %ObjectCount%
  {
  Loopnum++
+ Object%Loopnum%Clause%ClauseCount% = % Object%Loopnum%
  Object%Loopnum% =
  }
  ObjectCount = 1
@@ -454,8 +499,6 @@ GoSub, TurnCOWintoWords
   ;turn the concepts' constrings into actual words
 Gosub, VerbOrNoun
 Gosub, DefineProforms
-Thoughts = I will now examine the sentence. There are %WordCount% words to check.
-Gosub, HedoneThink
 Gosub, IdentifyWordClass
   ;Assigns various roles to the words, depending on which word class they are. Gets the subjects, action and objects from the message.
 Gosub, ThinkSubjectsEtc
@@ -648,10 +691,25 @@ CurrentWordsOfWordDP = % WordsOfWord%LoopDP%
 CurrentWordDP = % Word%LoopDP%
 Thoughts = (DefineProforms) Current word is "%CurrentWordDP%", its constring is %CurrentWordsOfWordDP%
 Gosub, HedoneThink
+If CurrentWordsOfWordDP contains ☆Location☆
+{
+Thoughts = (DefineProforms) This is a location, so I will skip it.
+Gosub, HedoneThink
+Continue
+}
 If CurrentWordsOfWordDP contains ☆Proform☆
 {
-Thoughts = (DefineProforms) Now defining proform "%CurrentWordDP%"
+ObjectDP = %Object1Clause1%
+If ObjectDP !=
+{
+ConceptForFCC = %ObjectDP%
+Gosub, FindConnectionsOfConcept
+Thoughts = (DefineProforms) It is "%ObjectDP%", its constring is %WordsOfWordFCC%.
 Gosub, HedoneThink
+Word%LoopDP% = %ObjectDP%
+WordsOfWord%LoopDP% = %WordsOfWordFCC%
+ConsOfWord%LoopDP% = %ConsOfWordFCC%
+}
 }
 }
 Return
@@ -1604,29 +1662,35 @@ Wordclass4 = Pronoun
 Wordclass5 = Adverb
 Wordclass6 = Conjunction
 Wordclass7 = Preposition
+Wordclass8 = Determiner
 LoopVONWC := 0
-Loop, 7
+Loop, 8
 {
 LoopVONWC++
 CurrentWordClass = % WordClass%LoopVONWC%
 currentWordClassStars = ☆%CurrentWordClass%☆
 If CurrentWordsOfWordVON contains %CurrentWordClassStars%
 {
-  WordClassOfWord = %CurrentWordClass%
+WordClassOfWord = %CurrentWordClass%
+Thoughts = (VerbOrNoun) Current word class of "%CurrentWordVON%" is "%WordClassOfWord%"
+Gosub, HedoneThink
 }
 }
    ;figures out which word class the word currently is
 If CurrentWordStarsVON contains ☆that☆
 {
-  Thoughts = (VerbOrNoun) This word is "that"
-  Gosub, HedoneThink
 If NextWordsOfWordVON contains ☆verb☆
 {
-  Thoughts = (VerbOrNoun) This word is "that", and the next word is a verb, so this word is a pronoun.
+If Subject1 =
+{
+  Thoughts = (VerbOrNoun) This word is "that", and the next word is a verb, and no subject has been found, so this word is a pronoun.
   Gosub, HedoneThink
+WordsOfWord%LoopVON% := StrReplace(CurrentWordsOfWordVON, CurrentWordClassStars, "☆pronoun☆proform☆", 1)
+CurrentWordsOfWordVON = % WordsOfWord%LoopVON%=
+  ;replaces "the current word class" with "pronoun"
 }
 }
-;Anne has 1092 bananas that must be put away in boxes.
+}
 }
 Return
 
@@ -2122,6 +2186,16 @@ Break
 If WordsOfWord%WordNumVar% contains ☆pronoun☆
 {
  ThisWord = pronoun
+If Object1 !=
+{
+StartOfClause = % Word%WordNumVar%
+WordCount = %LastWordNum%
+ClauseFound = 1
+FindHowMany = 0
+  Thoughts = (IdentifyWordClass) This is a pronoun, but an object has already been found, so it is the start of a new clause.
+  Gosub, HedoneThink
+Break
+}
 CanBeObjSubj = 1
 }
 if ThisWord =
