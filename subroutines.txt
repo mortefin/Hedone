@@ -26,6 +26,8 @@ GetConnections retrieves the direct connections of word-number %WordNum%, storin
 
 - - - - - For connections and concepts:
 
+ChangeWordClass requires %WordPosForCWC% and %NewWordClass%. If the word is 
+
 FindWordNumber finds the number (Example: "i love pie" has "pie" as the third word) of word %WordForFWN%, saved as %FoundWordNumber%. If the word is not found (because it is not in the current clause), the number is set to 0.
 
 GetNumOfWord gets the number of commas for the word %WordToFind%, saved as %WordNum%, creating it if needed. If it's a number, %wordnum% is saved as %N"number"% and sets %IsANumber% to 1.
@@ -100,7 +102,7 @@ CheckEndLetters checks to see if %CurrentWord% ends in %EndLetters%. If it does,
 
 - - - - - Other:
 
-ThinkSubjectsEtc tells the user what the subjects, actions, adjectives and objects are.
+ThinkSubjectsEtc tells the user what the subjects, actions, adjectives and objects are. Also checks to see if the subjects/etc are what they should be.
 
 HedoneSend sends %Answer%
 

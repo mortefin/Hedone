@@ -48,6 +48,7 @@ DisableThoughts:
 Return
 
 Action!:
+  ;runs every time the user sends text
 	GuiControlGet, PTEXT,, In
 	line := ""
 	dlg := dlg name "♡User♡: " PTEXT "`n"
@@ -70,7 +71,7 @@ If RunCount = 1
 GoalUnderstood = 0
 If PTEXT contains Task
 {
-If PTEXT not contains New
+If PTEXT not contains New,Edit
 {
 Answer = OK, I will do a task. Which task?
 Gosub, HedoneSend
@@ -82,6 +83,13 @@ Return
 If PTEXT contains New
 {
 Answer = OK, you will tell me how to do something new. What is it called?
+Gosub, HedoneSend
+Context = NameNewTask
+GoalUnderstood = 1
+}
+If PTEXT contains Edit
+{
+Answer = OK, you will edit a task. Which task?
 Gosub, HedoneSend
 Context = NameNewTask
 GoalUnderstood = 1
@@ -203,9 +211,7 @@ Return
 }
 If Context = NewTask
 {
-Answer = I'm not going to parse that, but you are explaining the Task %TaskName%.
-Gosub, HedoneSend
-ClauseExaminer = WordProblem
+ClauseExaminer = EditTask
 Gosub, SentenceParse
 Return
 }
@@ -333,6 +339,33 @@ Gosub, HedoneThink
 Gosub, SemanticParsing
 Gosub, AddConnectionToFile
 }
+Return
+
+EditTaskClauseExaminer:
+Gosub, SemanticParsing
+If FindHowMany = 1
+{
+GoSub, CalculateHowMany
+FileDelete, TempBackup.txt
+FileAppend, %FileVarContents%, TempBackup.txt, UTF-8
+FileDelete, Temp.txt
+FileRead, TempFile, Temp.txt
+TempFile2 = %TempFile%☻
+}
+Else
+{
+If OnlyOneConnection = 1
+{
+Gosub, OnlyOneConnection
+}
+Else
+{
+Gosub, AddImplicationsToFile
+GoSub, AddConnectionToFile
+  ;attaches the subjects to the objects, in the file
+}
+}
+Gosub, HedoneSend
 Return
 
 WordProblemClauseExaminer:
@@ -1468,11 +1501,6 @@ Else
 {
 If Object1 =
 {
-Thoughts = (AddConnectionToFile) I don't know the object. I will assume the object is the last word, %CurrentWord%
-Gosub, HedoneThink
-ObjectCount++
-Object%ObjectCount% = %CurrentWord%
-Gosub, AddCons
 }
 Else
 {
@@ -2085,10 +2113,14 @@ If WordsOfWord%WordNumVar% contains ☆verb☆
  If WordsOfWord%WordNumVar% contains ☆be☆
  {
  Action%ActionCount% = be
+ Action%ActionCount%WordPos = %WordNumVar%
+ WordClassOfWord%WordNumVar% = Action%ActionCount%
  }
  Else
  {
  Action%ActionCount% = %CurrentWord%
+ Action%ActionCount%WordPos = %WordNumVar%
+ WordClassOfWord%WordNumVar% = Action%ActionCount%
  }
  If QuestionWordFound = 1
  {
@@ -2154,6 +2186,8 @@ If WordsOfWord%WordNumVar% not contains ☆location☆,☆proform☆,☆question
 {
  ActionCount++
  Action%ActionCount% = %CurrentWord%
+ Action%ActionCount%WordPos = %WordNumVar%
+ WordClassOfWord%WordNumVar% = Action%ActionCount%
 }
 WordForCR = % Word%WordNumVar%
 }
@@ -2427,6 +2461,16 @@ Return
   ;finds the number (Example: "i love pie" has "pie" as the third word) of word %WordForFWN%, saved as %FoundWordNumber%
 
 ThinkSubjectsEtc:
+If Object1 =
+{
+LastWord = % Word%Wordcount%
+Thoughts = (ThinkSubjectsEtc) I don't know the object. I will assume the object is the last word, "%LastWord%"
+Gosub, HedoneThink
+ObjectCount = 1
+Object1 = %LastWord%
+Object1WordPos = %WordCount%
+WordClassOfWord%WordCount% = Object1
+}
 Loopnum := 0
 Thoughts = The subjects/etc are:
 Loop, %SubjectCount%
@@ -2451,11 +2495,23 @@ Else
 Thoughts = %Thoughts% (Sub)%CurrentSub%
 }
 }
-Loopnum := 0
+Loopnumx := 0
 Loop, %ActionCount%
 {
-LoopNum++
-CurrentAct = % Action%Loopnum%
+LoopNumx++
+CurrentAct = % Action%Loopnumx%
+CurrentActWordPos = % Action%Loopnumx%WordPos
+WordClassOfThatWord = % WordClassOfWord%CurrentActWordPos%
+If WordClassOfThatWord != Action%Loopnumx%
+{
+Action%Loopnumx% =
+RealThoughts = %Thoughts%
+Thoughts = (ThinkSubjectsEtc) Current action, "%CurrentAct%", is not actually an action. Decreasing ActionCount, clearing the Action%LoopnumX% variable and skipping.
+Gosub, HedoneThink
+Thoughts = %RealThoughts%
+ActionCount--
+Continue
+}
 Thoughts = %Thoughts% (Act)%CurrentAct%
 }
 Loopnum := 0
